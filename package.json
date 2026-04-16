@@ -1,0 +1,78 @@
+{
+  "name": "@configkits/mcp-devtools",
+  "version": "0.1.0",
+  "description": "Browser DevTools-style inspector for MCP tool calls and agent sessions",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/core/vite-plugin.d.ts",
+      "import": "./dist/core/vite-plugin.js"
+    },
+    "./standalone": {
+      "types": "./dist/standalone/server.d.ts",
+      "import": "./dist/standalone/server.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run build:panel && tsc -p tsconfig.build.json",
+    "build:panel": "vite build --config vite.config.panel.ts",
+    "dev": "npm run build:panel && node --import tsx src/standalone/server.ts",
+    "demo": "vite --config demo/vite.config.ts",
+    "test": "node --import tsx --test tests/interceptor.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "devtools",
+    "model-context-protocol",
+    "ai-agents",
+    "debugging",
+    "vite-plugin"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@chakra-ui/react": "^3.34.0",
+    "@emotion/react": "^11.14.0",
+    "d3": "^7.9.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@types/ws": "^8.18.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": ">=1.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "vite": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  }
+}
