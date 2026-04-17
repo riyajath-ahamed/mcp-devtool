@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP DevTools</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #__mcp_devtools_panel__ {
+      height: 100%; width: 100%; overflow: hidden;
+      background: #18181b;
+    }
+  </style>
+</head>
+<body>
+  <div id="__mcp_devtools_panel__"></div>
+  <script type="module" src="./ws-client.ts"></script>
+  <script type="module" src="./main.tsx"></script>
+</body>
+</html>
