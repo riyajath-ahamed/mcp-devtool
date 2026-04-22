@@ -1,0 +1,41 @@
+{
+  "name": "@configkits/mcp-devtools-panel",
+  "version": "0.1.0",
+  "description": "React browser panel UI for MCP DevTools",
+  "type": "module",
+  "main": "./dist/panel.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/panel.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["mcp", "devtools", "panel", "react", "d3"],
+  "license": "MIT",
+  "dependencies": {
+    "@configkits/mcp-devtools-core": "workspace:*",
+    "@chakra-ui/react": "^3.34.0",
+    "@emotion/react": "^11.14.0",
+    "d3": "^7.9.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3"
+  }
+}

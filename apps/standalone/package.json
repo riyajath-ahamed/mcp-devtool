@@ -1,0 +1,20 @@
+{
+  "name": "standalone",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --import tsx src/server.ts",
+    "build": "echo 'standalone: nothing to build (runs via tsx)'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@configkits/mcp-devtools-core": "workspace:*",
+    "@configkits/mcp-devtools-bridge": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

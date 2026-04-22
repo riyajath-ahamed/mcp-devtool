@@ -1,0 +1,35 @@
+{
+  "name": "@configkits/mcp-devtools-core",
+  "version": "0.1.0",
+  "description": "Core types, interceptor, event emitter, and session store for MCP DevTools",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "test": "node --import tsx --test tests/interceptor.test.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["mcp", "devtools", "model-context-protocol", "interceptor"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@types/node": "^22.15.3",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

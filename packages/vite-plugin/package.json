@@ -1,0 +1,37 @@
+{
+  "name": "@configkits/mcp-devtools-vite",
+  "version": "0.1.0",
+  "description": "Vite plugin for MCP DevTools — zero-config panel injection",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["mcp", "devtools", "vite", "vite-plugin"],
+  "license": "MIT",
+  "dependencies": {
+    "@configkits/mcp-devtools-core": "workspace:*",
+    "@configkits/mcp-devtools-bridge": "workspace:*"
+  },
+  "peerDependencies": {
+    "vite": ">=5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3"
+  }
+}

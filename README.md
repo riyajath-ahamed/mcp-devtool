@@ -4,6 +4,24 @@ Browser DevTools-style inspector for MCP (Model Context Protocol) tool calls and
 
 Intercept, record, and visualize every tool call your AI agent makes — with latency tracking, session grouping, and a real-time browser UI.
 
+## Packages
+
+This is a pnpm monorepo with four published packages:
+
+| Package | Description |
+|---|---|
+| [`@configkits/mcp-devtools-core`](packages/core/) | Types, interceptor, event emitter, session store — no framework deps, pure Node.js |
+| [`@configkits/mcp-devtools-bridge`](packages/bridge/) | WebSocket server + HTTP server that stream events to the browser panel |
+| [`@configkits/mcp-devtools-vite`](packages/vite-plugin/) | Vite plugin — auto-injects the panel into every page during dev |
+| [`@configkits/mcp-devtools-panel`](packages/panel/) | React + D3.js browser UI — stream, timeline, waterfall, diff viewer |
+
+Plus two internal apps:
+
+| App | Description |
+|---|---|
+| [`playground`](apps/playground/) | Vite demo app with mock MCP server for testing |
+| [`standalone`](apps/standalone/) | Express-style HTTP server serving the panel at `:6900` |
+
 ## Architecture
 
 ```
@@ -25,19 +43,6 @@ Intercept, record, and visualize every tool call your AI agent makes — with la
                                 └──────────────────┘                    └──────────────────┘
 ```
 
-The system has three layers: **Core** (interception + event bus), **Server** (HTTP + WebSocket delivery), and **Panel** (browser UI).
-
-### Core Layer (`src/core/`)
-
-| Module | Purpose |
-|---|---|
-| `interceptor.ts` | `TransportInterceptor` — drop-in wrapper around any MCP `Transport` (stdio, HTTP, SSE). Intercepts all JSON-RPC frames bidirectionally without altering protocol behavior. Tracks `tools/call` request/response pairs, computes latency, and handles timeouts. |
-| `event-emitter.ts` | `InternalEventEmitter` — lightweight typed pub/sub bus. All events flow through this. Listeners are crash-isolated so a failing subscriber never breaks the intercept path. |
-| `session-store.ts` | `SessionStore` — in-memory store for `Session` and `ToolCallRecord` objects. Supports export, pruning, and pending-call lookup by JSON-RPC request ID. |
-| `ws-bridge.ts` | `WsBridge` — WebSocket server that broadcasts `DevToolsEvent` frames to all connected browser panels. On connection, replays the full session store snapshot so late-opening panels get complete state. |
-| `vite-plugin.ts` | `mcpDevtools()` — Vite plugin that injects the panel client script into every HTML page during development. Automatically starts the WS bridge and handles reconnection. No-op in production builds. |
-| `types.ts` | All shared TypeScript types: `ToolCallRecord`, `Session`, `DevToolsEvent` union (8 event types), `InterceptorOptions`, `DevToolsEventEmitter` interface. |
-
 ### Event Types
 
 ```
@@ -51,35 +56,6 @@ server:connected    →  Transport started
 server:disconnected →  Transport closed
 ```
 
-### Server Layer
-
-**Vite Plugin** (`src/core/vite-plugin.ts`)
-
-For Vite-based projects. Injects a client-side script that opens a WebSocket connection to the bridge and mounts the panel UI as a floating overlay inside a Shadow DOM host (styles never leak into the app).
-
-**Standalone Server** (`src/standalone/server.ts`)
-
-For non-Vite setups. Starts two servers:
-
-- **HTTP** (default `:6898`) — serves the pre-built panel UI and exposes `POST /events` for ingesting events from external sources and `GET /api/sessions` for exporting session data.
-- **WebSocket** (default `:6899`) — the WS bridge that streams events to the panel in real time.
-
-### Panel Layer (`src/panel/`)
-
-A React application built with Chakra UI v3 and D3.js, compiled into a standalone bundle via Vite.
-
-| Module | Purpose |
-|---|---|
-| `Panel.tsx` | Main orchestrator — tabbed interface, filtering (text/status/time range), URL hash deep-linking, session export, minimize/restore. |
-| `TimelineView.tsx` | Chronological event timeline with session replay controls (play/pause/step/rewind). |
-| `WaterfallChart.tsx` | D3.js-powered network waterfall chart showing tool call timing as horizontal bars. |
-| `DiffViewer.tsx` | Side-by-side request/response diff viewer in the detail drawer. |
-| `shared.tsx` | Reusable components: `StatusBadge`, `LatencyBar`, `JsonViewer`, `Logo`, `EmptyState`. |
-| `theme.tsx` | Light/dark theme system with comprehensive token map. All colors across the UI derive from `ThemeTokens` — no hardcoded color literals. Persists preference to localStorage and respects `prefers-color-scheme`. |
-| `system.ts` | Custom Chakra UI v3 system configuration (Inter font, slate palette, rounded corners). |
-| `ws-client.ts` | WebSocket client for standalone mode — connects to the bridge and dispatches events as `CustomEvent` on `window`. |
-| `main.tsx` | Panel entry point — mounts React into `#__mcp_devtools_panel__`. |
-
 ### Data Flow
 
 1. Your MCP client sends a `tools/call` JSON-RPC request through the `TransportInterceptor`.
@@ -89,71 +65,99 @@ A React application built with Chakra UI v3 and D3.js, compiled into a standalon
 5. The `WsBridge` broadcasts each event as JSON to all connected WebSocket clients.
 6. The browser panel receives events, updates its React state, and renders the stream/timeline/waterfall views.
 
-If a tool call exceeds `callTimeoutMs` (default 30s) without a response, the interceptor marks it as `timeout` and emits `tool:error`.
-
-## Usage
+## Quick Start
 
 ### With Vite
 
+```bash
+npm i @configkits/mcp-devtools-core @configkits/mcp-devtools-vite
+```
+
 ```ts
 // vite.config.ts
-import { mcpDevtools } from "@configkits/mcp-devtools/vite";
+import { mcpDevtools } from "@configkits/mcp-devtools-vite";
 
 export default defineConfig({
   plugins: [mcpDevtools({ port: 6899 })],
 });
 ```
 
-### Intercepting MCP Transport
-
 ```ts
+// src/agent.ts
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { TransportInterceptor } from "@configkits/mcp-devtools";
+import { TransportInterceptor } from "@configkits/mcp-devtools-core";
 
 const base = new StdioClientTransport({ command: "node", args: ["server.js"] });
 const transport = new TransportInterceptor(base, { serverId: "my-server" });
 
 const client = new Client({ name: "my-agent", version: "1.0.0" }, {});
-await client.connect(transport); // drop-in replacement
+await client.connect(transport);
 ```
 
-### Standalone Server
+### Standalone (any client)
 
 ```bash
-npm run dev
-# Panel UI:  http://127.0.0.1:6898
-# WS bridge: ws://127.0.0.1:6899
-# POST events to http://127.0.0.1:6898/events
+npm i @configkits/mcp-devtools-core @configkits/mcp-devtools-bridge
 ```
 
-## Scripts
+```ts
+import { InternalEventEmitter, SessionStore } from "@configkits/mcp-devtools-core";
+import { WsBridge } from "@configkits/mcp-devtools-bridge";
 
-| Script | Description |
+const emitter = new InternalEventEmitter();
+const store = new SessionStore();
+new WsBridge(emitter, store, { port: 6899 });
+
+// Then wrap your transport with TransportInterceptor({ eventEmitter: emitter })
+```
+
+### Default Ports
+
+| Service | Default |
 |---|---|
-| `npm run build` | Build panel UI + compile TypeScript |
-| `npm run build:panel` | Build only the panel UI bundle |
-| `npm run dev` | Start the standalone devtools server |
-| `npm run demo` | Start the interactive demo (simulated MCP calls) |
-| `npm test` | Run interceptor unit tests |
-| `npm run typecheck` | TypeScript type checking |
+| WS bridge | `ws://127.0.0.1:6899` |
+| Standalone panel UI | `http://localhost:6900` |
+| Vite panel bundle | `/@mcp-devtools/panel.js` |
 
-## Demo
-
-The `demo/` directory contains an interactive demo that simulates MCP tool calls without a real MCP server. It sends mock events to the standalone server's HTTP endpoint and connects to the WS bridge to display the panel.
+## Development
 
 ```bash
-# Terminal 1: start the standalone server
-npm run dev
+# Install dependencies
+pnpm install
 
-# Terminal 2: start the demo
-npm run demo
+# Build all packages (respects dependency order via Turbo)
+pnpm build
+
+# Run tests
+pnpm test
+
+# Start the playground dev server
+pnpm --filter playground dev
+
+# Start the standalone server
+pnpm --filter standalone dev
 ```
 
-## Dependencies
+### Build Order
 
-- **Runtime**: `ws` (WebSocket server), `@chakra-ui/react` + `@emotion/react` (UI), `d3` (waterfall chart)
-- **Peer**: `@modelcontextprotocol/sdk`, `react`, `react-dom`, `vite` (optional)
+Turbo ensures packages build in dependency order:
+
+```
+core → bridge → vite-plugin → panel
+                            → playground
+                            → standalone
+```
+
+## Publishing
+
+All four packages are version-linked via [Changesets](https://github.com/changesets/changesets):
+
+```bash
+pnpm changeset        # Create a changeset
+pnpm changeset version # Bump versions
+pnpm release          # Build + publish all
+```
 
 ## License
 

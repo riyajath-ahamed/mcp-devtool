@@ -1,0 +1,21 @@
+{
+  "name": "playground",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@configkits/mcp-devtools-core": "workspace:*",
+    "@configkits/mcp-devtools-bridge": "workspace:*",
+    "@configkits/mcp-devtools-vite": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3"
+  }
+}
